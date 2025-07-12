@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 const SocialProof = () => {
   const [variant, setVariant] = useState(1);
@@ -41,16 +41,18 @@ const SocialProof = () => {
     setShowSecondary(false);
   };
 
-  // Toggle pop-up
-  const togglePopUp = () => {
-    setIsOpen(!isOpen);
-    if (isOpen && intervalRef.current) {
-      clearTimeout(intervalRef.current);
-      intervalRef.current = null;
-      setVariant(1);
-      setShowSecondary(false);
-    }
-  };
+  // Toggle pop-up with useCallback to keep stable reference
+  const togglePopUp = useCallback(() => {
+    setIsOpen((prevIsOpen) => {
+      if (prevIsOpen && intervalRef.current) {
+        clearTimeout(intervalRef.current);
+        intervalRef.current = null;
+        setVariant(1);
+        setShowSecondary(false);
+      }
+      return !prevIsOpen;
+    });
+  }, []);
 
   // Handle Escape key to close pop-up
   useEffect(() => {
@@ -61,7 +63,7 @@ const SocialProof = () => {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen]);
+  }, [isOpen, togglePopUp]);
 
   // Cleanup interval on unmount
   useEffect(() => {
